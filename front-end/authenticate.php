@@ -1,10 +1,10 @@
 <?php
 session_start();
 // Change this to your connection info.
-$DATABASE_HOST = '';
-$DATABASE_USER = '';
-$DATABASE_PASS = '';
-$DATABASE_NAME = '';
+$DATABASE_HOST = '172.25.40.184';
+$DATABASE_USER = 'baseHost';
+$DATABASE_PASS = 'host';
+$DATABASE_NAME = 'baseDB';
 // Try and connect using the info above.
 $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
 if ( mysqli_connect_errno() ) {
