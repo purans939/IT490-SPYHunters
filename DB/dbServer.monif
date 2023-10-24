@@ -1,0 +1,5 @@
+ check process dbServer with pidfile /var/run/dbServer.pid
+   start program = "/etc/init.d/dbServer start"
+   stop program  = "/etc/init.d/dbServer stop"
+   if 4 restarts within 20 cycles then timeout
+
