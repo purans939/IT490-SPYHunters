@@ -1,16 +1,5 @@
 <?php
 session_start();
-// Change this to your connection info.
-$DATABASE_HOST = '';
-$DATABASE_USER = '';
-$DATABASE_PASS = '';
-$DATABASE_NAME = '';
-// Try and connect using the info above.
-$con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-if ( mysqli_connect_errno() ) {
-	// If there is an error with the connection, stop the script and display the error.
-	exit('Failed to connect to MySQL: ' . mysqli_connect_error());
-}
 
 if ( !isset($_POST['username'], $_POST['password']) ) {
 	// Could not get the data that should have been sent.
@@ -23,26 +12,34 @@ $password = $_POST['password'];
 // You should sanitize and hash the password for security. This is a basic example; use a more secure method in practice.
 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-// Prepare an SQL query to insert the username and hashed password into your database.
-$stmt = $con->prepare("INSERT INTO accounts (username, password) VALUES (?, ?)");
+require_once('path.inc');
+require_once('get_host_info.inc');
+require_once('rabbitMQLib.inc');
 
-// Check if the prepare statement was successful.
-if ($stmt) {
-    // Bind the parameters and execute the query.
-    $stmt->bind_param("ss", $username, $hashed_password);
-
-    if ($stmt->execute()) {
-        echo 'User registered successfully!';
-    } else {
-        echo 'Error: ' . $stmt->error;
-    }
-
-    // Close the statement.
-    $stmt->close();
-} else {
-    echo 'Error: ' . $con->error;
+$client = new rabbitMQClient("testRabbitMQ.ini","testServer");
+if (isset($argv[1]))
+{
+  $msg = $argv[1];
+}
+else
+{
+  $msg = "test message";
 }
 
-// Close the database connection.
-$con->close();
+$request = array();
+$request['type'] = "createUser";
+$request['username'] = $username;
+$request['password'] = $password;
+$request['message'] = $msg;
+$response = $client->send_request($request);
+//$response = $client->publish($request);
+
+echo "client received response: ".PHP_EOL;
+print_r($response);
+echo "\n\n";
+
+echo $argv[0]." END".PHP_EOL;
+
+
+
 ?>
