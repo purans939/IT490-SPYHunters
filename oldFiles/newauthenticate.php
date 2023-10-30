@@ -4,12 +4,8 @@ session_start();
 require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
-require_once('testRabbitMQ.ini');
 
-
-echo "First part of script";
-
-$client = new rabbitMQClient("/var/www/spyweb/rabbitmq/rabbitmqphp_example/testRabbitMQ.ini","testServer");
+$client = new rabbitMQClient("baseRabbitMQ.ini","baseServer");
 if (isset($argv[1]))
 {
   $msg = $argv[1];
@@ -18,8 +14,6 @@ else
 {
   $msg = "test message";
 }
-
-echo "second part of script";
 
 $request = array();
 $request['type'] = "Login";
