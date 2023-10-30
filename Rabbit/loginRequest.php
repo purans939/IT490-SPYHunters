@@ -20,7 +20,7 @@ $request['username'] = "baseUserLoginRequest";
 $request['password'] = "basePW";
 $request['message'] = $msg;
 $response = $client->send_request($request);
-//$response = $client->publish($request);
+$response = $client->publish($request);
 
 
 $payload = json_encode($response);
