@@ -15,12 +15,12 @@ else
 }
 
 $request = array();
-$request['type'] = "Login";
-$request['username'] = "baseUserLoginRequest";
+$request['type'] = "login";
+$request['username'] = "abaseTest";
 $request['password'] = "basePW";
 $request['message'] = $msg;
 $response = $client->send_request($request);
-$response = $client->publish($request);
+//$response = $client->publish($request);
 
 
 $payload = json_encode($response);
