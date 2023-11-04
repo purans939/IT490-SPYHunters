@@ -1,0 +1,2 @@
+CREATE TABLE portfolio (username VARCHAR(32) NOT NULL, symbol VARCHAR(32) NOT NULL, side VARCHAR(32) NOT NULL, quantity VARCHAR(32) NOT NULL, ordertype VARCHAR(32) NOT NULL, price VARCHAR(32) NOT NULL);
+
