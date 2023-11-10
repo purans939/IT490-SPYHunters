@@ -127,68 +127,6 @@ else
 
 }
 
-function orderEntry($username,$symbol,$side,$quantity,$ordertype,$price)
-{
-$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-
-if ($mydb->errno != 0)
-{
-        echo "failed to connect to database: ". $mydb->error . PHP_EOL;
-        exit(0);
-}
-
-echo "successfully connected to database".PHP_EOL;
-
-$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
-$response = $mydb->query($query);
-
-        echo "Order has been entered";
-        return "Order has been entered";
-        //return false if not valid
-}
-
-function sendPortfolio ($username) {
-
-$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-
-if ($mydb->errno != 0)
-{
-        echo "failed to connect to database: ". $mydb->error . PHP_EOL;
-        exit(0);
-}
-
-echo "successfully connected to database".PHP_EOL;
-
-$query = "SELECT * FROM portfolio WHERE username = '$username';";
-
-$stmt = $mydb->query($query);
-
-//call port
-$callPort=[];
-
-while($row = $stmt->fetch_assoc()) {
-	$callPort[] = $row;
-	//print_r($callPort);
-};
-
-//call port
-
-
-if ($stmt->num_rows>0)
-{
-        echo "Portfolio sent".PHP_EOL;
-	return $callPort; 
-	
-}
-else
-{
-        echo "error on portfolio";
-}
-    return true;
-    //return false if not valid
-
-}
-
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;
@@ -205,10 +143,6 @@ function requestProcessor($request)
       return doValidate($request['sessionId']);
     case "createUser":
       return createUser($request['username'],$request['password']);	      
-    case "order":
-      return orderEntry($request['username'], $request['symbol'], $request['side'], $request['quantity'], $request['ordertype'], $request['price']);
-    case "portfolio":
-      return sendPortfolio($request['username']);
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 }
