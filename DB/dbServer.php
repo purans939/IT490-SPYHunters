@@ -139,6 +139,8 @@ if ($mydb->errno != 0)
 
 echo "successfully connected to database".PHP_EOL;
 
+//market order
+
 $query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
 $response = $mydb->query($query);
 
@@ -146,6 +148,8 @@ $response = $mydb->query($query);
         return "Order has been entered";
         //return false if not valid
 }
+
+//market order
 
 function sendPortfolio ($username) {
 
