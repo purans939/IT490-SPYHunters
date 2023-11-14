@@ -16,32 +16,46 @@ if ($mydb->errno != 0)
 
 	echo "successfully connected to database".PHP_EOL;
 
-	$query = "SELECT * FROM accounts WHERE username = '$username' AND password = '$password';";
-
 	$query2 = "SELECT password FROM accounts WHERE username = '$username';";
 	$stmt2 = $mydb->query($query2);	
 
+	$query = "SELECT * FROM accounts WHERE username = '$username'";
 	$stmt = $mydb->query($query);
-	if ($stmt->num_rows>0) 
-	{	
-		echo "login success";
-		$msg = "login success";
-		return $msg;	
-		//exit(0);
+	
+	//grabbing pw from db
+	$result = mysqli_query($mydb, $query2);
+	if (mysqli_num_rows($result) > 0) {
+		while ($row = mysqli_fetch_assoc($result)) {
+			$dbQPW=$row['password']; }
 	}
-	else if ($password != $query2)
+	//grabbing pw from db
+
+	if ($stmt->num_rows>0)	
 	{
-		echo "incorrect pw";
-		$msg = "incorrect pw";
-		return $msg;
+		if (password_verify($password, $dbQPW))  
+		{	
+			echo "login success";
+			$msg = "login success";
+			return $msg;	
+			//exit(0);
+		}
+		else if ($password != $query2)
+		{
+			echo "incorrect pw";
+			$msg = "incorrect pw";
+			return $msg;
+		}
+		else
+        	{
+                	echo "username not found";
+                	$msg = "username not found";
+                	return $msg;
+        	}	
 	}
 	else
-        {
-                echo "username not found";
-                $msg = "username not found";
-                return $msg;
-
-        }
+	{
+		return 'pw couldnt be verified';
+	}	
 }
 
 function createUser($username,$password)
