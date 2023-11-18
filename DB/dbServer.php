@@ -141,7 +141,7 @@ else
 
 }
 
-function orderEntry($username,$symbol,$side,$quantity,$ordertype,$price)
+function orderEntry($username,$symbol,$side,$quantity,$ordertype,$price,$stopPrice,$limitPrice)
 {
 $mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
 
@@ -154,6 +154,28 @@ if ($mydb->errno != 0)
 echo "successfully connected to database".PHP_EOL;
 
 //market order
+
+if ($ordertype='market') {
+	$buyPrice = $price;
+	}
+else if ($ordertype='limit'){
+	if ($limitPrice > $price) {
+		$price = $price;
+		return 'limit order fulfilled';
+	}
+	else {
+		return 'limit not met - order not fulfilled yet';
+	}
+}
+else if ($ordertype='stop'){
+        if ($stopPrice < $price) {
+		$price = $price;
+		return 'stop order fulfilled';
+	}
+	else {
+                return 'stop not met - order not fulfilled yet';
+        }
+}	
 
 $query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
 $response = $mydb->query($query);
@@ -224,7 +246,7 @@ function requestProcessor($request)
     case "createUser":
       return createUser($request['username'],$request['password']);	      
     case "order":
-      return orderEntry($request['username'], $request['symbol'], $request['side'], $request['quantity'], $request['ordertype'], $request['price']);
+      return orderEntry($request['username'], $request['symbol'], $request['side'], $request['quantity'], $request['ordertype'], $request['price'], $request['limitPrice'], $request['stopPrice']);
     case "portfolio":
       return sendPortfolio($request['username']);
   }
