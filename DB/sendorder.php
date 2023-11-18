@@ -3,8 +3,7 @@ require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 
-
-$client = new rabbitMQClient("baseRabbitMQ.ini","baseServer");
+$client = new rabbitMQClient("dbRabbitMQ.ini","baseServer");
 if (isset($argv[1]))
 {
   $msg = $argv[1];
@@ -24,6 +23,9 @@ $request['side'] = 'buy';
 $request['quantity'] = '5';
 $request['ordertype'] = 'market';
 $request['price'] = 'current';
+$request['limitPrice'] = 'current';
+$request['stopPrice'] = 'current';
+
 $response = $client->send_request($request);
 //$response = $client->publish($request);
 

@@ -4,6 +4,10 @@ require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+require '/home/ps1messaging/git/testDB/vendor/autoload.php';
+
 function doLogin($username,$password)
 {
 	$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
@@ -177,15 +181,58 @@ else if ($ordertype='stop'){
         }
 }	
 
+//market order
+
+// push notifications
+
+	//get email
+	
+	$mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+
+	$query2 = "SELECT email FROM accounts WHERE username = '$username';";
+        $stmt2 = $mydb2->query($query2);
+
+        //grabbing pw from db
+        $result = mysqli_query($mydb, $query2);
+        if (mysqli_num_rows($result) > 0) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                        $emailPush=$row['email']; }
+		}
+        //grabbing pw from db
+
+	
+	//get email
+
+$mail = new PHPMailer();
+$mail->isSMTP();
+$mail->SMTPDebug = SMTP::DEBUG_SERVER;
+$mail->Host = 'smtp.gmail.com';
+$mail->Port = 465;
+$mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+$mail->SMTPAuth = true;
+$mail->Username = 'spyhunters490@gmail.com';
+$mail->Password = 'gxjtdmttmxpypfkw';
+$mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
+$mail->addAddress($emailPush, 'Test Test');
+$mail->Subject = 'PHPMailer GMail SMTP test';
+$mail->Body = 'Order confirmed';
+
+//send the message, check for errors
+if (!$mail->send()) {
+    echo 'Mailer Error: ' . $mail->ErrorInfo;
+} else {
+    echo 'Message sent!';
+        }
+
+// push notifications
+
 $query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
-$response = $mydb->query($query);
 
         echo "Order has been entered";
         return "Order has been entered";
-        //return false if not valid
-}
+$response = $mydb->query($query);
 
-//market order
+}
 
 function sendPortfolio ($username) {
 
