@@ -1,0 +1,2 @@
+CREATE TABLE awaitingorders (id int(11) NOT NULL AUTO_INCREMENT, username VARCHAR(50) NOT NULL, symbol VARCHAR(8) NOT NULL, quantity VARCHAR(8), price VARCHAR(8) NOT NULL, limitOrder VARCHAR(8) NOT NULL, stopOrder VARCHAR(8) NOT NULL, PRIMARY KEY(id));
+

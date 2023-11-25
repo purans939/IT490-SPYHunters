@@ -159,27 +159,84 @@ if ($mydb->errno != 0)
 
 echo "successfully connected to database".PHP_EOL;
 
+//pull current price
+$url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='.$symbol.'&apikey=OKNV0XCQX6NO5GJD';
+$json = file_get_contents($url);
+$data = json_decode($json,true);
+
+$values=[];
+foreach ($data as $ar) {
+	$values[] = $ar['05. price'];
+}
+$priceVal = $ar['05. price'];
+
 //market order
 
 if ($ordertype='market') {
-	$buyPrice = $price;
+	$price = $price;
 	}
 else if ($ordertype='limit'){
-	if ($limitPrice > $price) {
-		$price = $price;
-		return 'limit order fulfilled';
+	if ($side='buy'){
+		if ($limitPrice > $priceVal) {
+			$price = $price;
+			$emailMsg = 'Buy limit order fulfilled';
+			return 'Buy limit order fulfilled';
+		}
+		else if ($limitPrice < $priceVal) {
+			$emailMsg = 'Price not met, order not fulfilled';
+			return 'Price not met, order not fulfilled';
+			
+			$mydb3 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+			$query = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
+			$stmt3 = $mydb->query($query);
+		}
 	}
-	else {
-		return 'limit not met - order not fulfilled yet';
+	else if ($side='sell') {
+		if ($limitPrice > $priceVal) {
+                        $price = $price;
+                        $emailMsg = 'Sell limit order fulfilled';
+                        return 'Sell limit order fulfilled';
+                }
+                else if ($limitPrice < $priceVal) {
+                        $emailMsg = 'Price not met, order not fulfilled';
+			return 'Price not met, order not fulfilled';
+
+			$mydb3 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+                        $query = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
+                        $stmt3 = $mydb->query($query);
+                }
 	}
 }
-else if ($ordertype='stop'){
-        if ($stopPrice < $price) {
-		$price = $price;
-		return 'stop order fulfilled';
-	}
-	else {
-                return 'stop not met - order not fulfilled yet';
+else if ($ordertype='stop') {
+        if ($side='buy'){
+                if ($stopPrice >= $priceVal) {
+                        $price = $price;
+                        $emailMsg = 'Buy stop order fulfilled';
+                        return 'Buy stop order fulfilled';
+                }
+                else {
+                        $emailMsg = 'Price not met, order not fulfilled';
+                        return 'Price not met, order not fulfilled';
+			
+			$mydb3 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+                        $query = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
+                        $stmt3 = $mydb->query($query);
+		}
+        }
+        else if ($side='sell') {
+                if ($stopPrice <= $priceVal) {
+                        $price = $price;
+                        $emailMsg = 'Sell stop order fulfilled';
+                        return 'Sell stop order fulfilled';
+                }
+                else {
+                        $emailMsg = 'Price not met, order not fulfilled';
+                        return 'Price not met, order not fulfilled';
+			
+			$mydb3 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+                        $query = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
+                        $stmt3 = $mydb->query($query);	
+		}
         }
 }	
 
@@ -213,7 +270,8 @@ $mail->Password = 'gxjtdmttmxpypfkw';
 $mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
 $mail->addAddress($emailPush, 'Test Test');
 $mail->Subject = 'Order confirmed!';
-$mail->Body = 'Order confirmed: ' . $symbol . ' at price: ' . $price;
+$mail->Body = $emailMsg;
+//$mail->Body = 'Order confirmed: ' . $symbol . ' at price: ' . $price;
 
 //send the message, check for errors
 if (!$mail->send()) {
