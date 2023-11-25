@@ -41,7 +41,7 @@ class rabbitMQServer
 		// send the ack to clear the item from the queue
 		if ($msg->getRoutingKey() !== "*")
     {
-      return;
+	    //return;
     }
     $this->conn_queue->ack($msg->getDeliveryTag());
 		try

@@ -8,7 +8,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 require '/home/ps1messaging/git/testDB/vendor/autoload.php';
 
-$client = new rabbitMQClient("dbRabbitMQ.ini","dmzServer");
+//$client = new rabbitMQClient("dbRabbitMQ.ini","dmzServer");
 
 function doLogin($username,$password)
 {
@@ -280,7 +280,7 @@ function sendPredictions ($symbol) {
 $client = new rabbitMQClient("dbRabbitMQ.ini","dmzServer");
 $request = array();
 $request['type'] = "predictions";
-$request['symbol'] = "SPY";
+$request['symbol'] = $symbol;
 $response = $client->send_request($request);
 
 echo "client received response: ".PHP_EOL;
@@ -296,15 +296,14 @@ foreach ($response as $row) {
 	echo $values;
 	//$query2 = "INSERT INTO predictions (symbol, datetime, open, high, low, close, volume, adjusted) VALUES (1, 2, 3, 4, 5, 6, 7, 8)";
 	$query2 = "INSERT INTO predictions ($columns) VALUES ($values)";
-
+	
 $mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
 if ($mydb2->errno != 0) {
         echo "failed to connect to database: ". $mydb2->error . PHP_EOL;
         exit(0); }
 echo "successfully connected to database".PHP_EOL;
 $stmt2 = $mydb2->query($query2);
-
-}
+	}
 
 //db
 $mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
