@@ -8,6 +8,8 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 require '/home/ps1messaging/git/testDB/vendor/autoload.php';
 
+//$client = new rabbitMQClient("dbRabbitMQ.ini","dmzServer");
+
 function doLogin($username,$password)
 {
 	$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
@@ -188,19 +190,15 @@ else if ($ordertype='stop'){
 	//get email
 	
 	$mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-
 	$query2 = "SELECT email FROM accounts WHERE username = '$username';";
         $stmt2 = $mydb2->query($query2);
 
-        //grabbing pw from db
         $result = mysqli_query($mydb, $query2);
         if (mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
                         $emailPush=$row['email']; }
 		}
-        //grabbing pw from db
-
-	
+        
 	//get email
 
 $mail = new PHPMailer();
@@ -214,8 +212,8 @@ $mail->Username = 'spyhunters490@gmail.com';
 $mail->Password = 'gxjtdmttmxpypfkw';
 $mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
 $mail->addAddress($emailPush, 'Test Test');
-$mail->Subject = 'PHPMailer GMail SMTP test';
-$mail->Body = 'Order confirmed';
+$mail->Subject = 'Order confirmed!';
+$mail->Body = 'Order confirmed: ' . $symbol . ' at price: ' . $price;
 
 //send the message, check for errors
 if (!$mail->send()) {
@@ -276,6 +274,68 @@ else
 
 }
 
+function sendPredictions ($symbol) {
+
+//send client to dmz asking for data
+$client = new rabbitMQClient("dbRabbitMQ.ini","dmzServer");
+$request = array();
+$request['type'] = "predictions";
+$request['symbol'] = $symbol;
+$response = $client->send_request($request);
+
+echo "client received response: ".PHP_EOL;
+print_r($response);
+echo "\n\n";
+
+//add response into db + if symbol is in there, update rows
+
+foreach ($response as $row) {
+	$columns = 'Symbol, ' . implode(", ", array_keys($row));
+	echo $columns;
+	$values = "'" . $symbol . "'" . ", " . "'" . implode("', '", $row) . "'";
+	echo $values;
+	//$query2 = "INSERT INTO predictions (symbol, datetime, open, high, low, close, volume, adjusted) VALUES (1, 2, 3, 4, 5, 6, 7, 8)";
+	$query2 = "INSERT INTO predictions ($columns) VALUES ($values)";
+	
+$mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+if ($mydb2->errno != 0) {
+        echo "failed to connect to database: ". $mydb2->error . PHP_EOL;
+        exit(0); }
+echo "successfully connected to database".PHP_EOL;
+$stmt2 = $mydb2->query($query2);
+	}
+
+//db
+$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+if ($mydb->errno != 0) {
+        echo "failed to connect to database: ". $mydb->error . PHP_EOL;
+        exit(0); }
+echo "successfully connected to database".PHP_EOL;
+$query = "SELECT * FROM predictions WHERE symbol = '$symbol';";
+$stmt = $mydb->query($query);
+
+//call prediction of symbol from db
+$callPrediction=[];
+while($row = $stmt->fetch_assoc()) {
+        $callPrediction[] = $row;
+        //print_r($callPrediction);
+        };
+
+//send prediction back to frontend
+if ($stmt->num_rows>0)
+{
+        echo "Prediction sent".PHP_EOL;
+        return $callPrediction;
+}
+else
+{
+        echo "error on prediction";
+}
+    return true;
+    //return false if not valid
+
+}
+
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;
@@ -296,6 +356,8 @@ function requestProcessor($request)
       return orderEntry($request['username'], $request['symbol'], $request['side'], $request['quantity'], $request['ordertype'], $request['price'], $request['limitPrice'], $request['stopPrice']);
     case "portfolio":
       return sendPortfolio($request['username']);
+    case "predictions":
+      return sendPredictions($request['symbol']);      
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 }

@@ -22,7 +22,7 @@ $request['symbol'] = '$SPY';
 $request['side'] = 'buy';
 $request['quantity'] = '5';
 $request['ordertype'] = 'market';
-$request['price'] = 'current';
+$request['price'] = '$123.45';
 $request['limitPrice'] = 'current';
 $request['stopPrice'] = 'current';
 
