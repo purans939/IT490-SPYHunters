@@ -149,16 +149,6 @@ else
 
 function orderEntry($username,$symbol,$side,$quantity,$ordertype,$price,$stopPrice,$limitPrice)
 {
-$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-
-if ($mydb->errno != 0)
-{
-        echo "failed to connect to database: ". $mydb->error . PHP_EOL;
-        exit(0);
-}
-
-echo "successfully connected to database".PHP_EOL;
-
 //pull current price
 $url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='.$symbol.'&apikey=OKNV0XCQX6NO5GJD';
 $json = file_get_contents($url);
@@ -166,97 +156,65 @@ $data = json_decode($json,true);
 
 $values=[];
 foreach ($data as $ar) {
-	$values[] = $ar['05. price'];
+        $values[] = $ar['05. price'];
 }
 $priceVal = $ar['05. price'];
+	
+//market order types
+if ($ordertype=='market'){
+	$price = $priceVal;
+	
+	$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+	$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
+	$response = $mydb->query($query);
 
-//market order
-
-if ($ordertype='market') {
-	$price = $price;
-	}
-else if ($ordertype='limit'){
-	if ($side='buy'){
-		if ($limitPrice > $priceVal) {
-			$price = $price;
-			$emailMsg = 'Buy limit order fulfilled';
-			return 'Buy limit order fulfilled';
-		}
-		else if ($limitPrice < $priceVal) {
-			$emailMsg = 'Price not met, order not fulfilled';
-			return 'Price not met, order not fulfilled';
-			
-			$mydb3 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-			$query = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
-			$stmt3 = $mydb->query($query);
-		}
-	}
-	else if ($side='sell') {
-		if ($limitPrice > $priceVal) {
-                        $price = $price;
-                        $emailMsg = 'Sell limit order fulfilled';
-                        return 'Sell limit order fulfilled';
-                }
-                else if ($limitPrice < $priceVal) {
-                        $emailMsg = 'Price not met, order not fulfilled';
-			return 'Price not met, order not fulfilled';
-
-			$mydb3 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-                        $query = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
-                        $stmt3 = $mydb->query($query);
-                }
-	}
 }
-else if ($ordertype='stop') {
-        if ($side='buy'){
-                if ($stopPrice >= $priceVal) {
-                        $price = $price;
-                        $emailMsg = 'Buy stop order fulfilled';
-                        return 'Buy stop order fulfilled';
-                }
-                else {
-                        $emailMsg = 'Price not met, order not fulfilled';
-                        return 'Price not met, order not fulfilled';
-			
-			$mydb3 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-                        $query = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
-                        $stmt3 = $mydb->query($query);
-		}
+else if ($ordertype=='limit'){
+	$priceVal = 459;
+	if($limitPrice >= $priceVal){
+		$price = $priceVal;
+		
+		$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+		$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
+		$response = $mydb->query($query);
+	}
+	else{
+		$orderDB = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+		$orderQ = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ($username, $symbol, $quantity, $price, $limitPrice, $stopPrice);";
+		$response = $orderDB->query($orderQ);
+	}	
+}
+else if ($ordertype=='stop'){
+	$priceVal = 459;
+	if($stopPrice >= $priceVal){    
+                $price = $priceVal;
+		
+		$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+		$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
+		$response = $mydb->query($query);
+	}
+        else{
+		$orderDB = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+		$orderQ = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES($username, $symbol, $quantity, $price, $limitOrder, $stopOrder)";
+		$response = $orderDB->query($orderQ);
         }
-        else if ($side='sell') {
-                if ($stopPrice <= $priceVal) {
-                        $price = $price;
-                        $emailMsg = 'Sell stop order fulfilled';
-                        return 'Sell stop order fulfilled';
-                }
-                else {
-                        $emailMsg = 'Price not met, order not fulfilled';
-                        return 'Price not met, order not fulfilled';
-			
-			$mydb3 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-                        $query = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
-                        $stmt3 = $mydb->query($query);	
-		}
-        }
-}	
-
-//market order
+}
 
 // push notifications
 
 	//get email
-	
-	$mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-	$query2 = "SELECT email FROM accounts WHERE username = '$username';";
+        
+        $mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+        $query2 = "SELECT email FROM accounts WHERE username = '$username';";
         $stmt2 = $mydb2->query($query2);
 
         $result = mysqli_query($mydb, $query2);
         if (mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
                         $emailPush=$row['email']; }
-		}
+                }
         
-	//get email
+        //get email
 
 $mail = new PHPMailer();
 $mail->isSMTP();
@@ -270,7 +228,7 @@ $mail->Password = 'gxjtdmttmxpypfkw';
 $mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
 $mail->addAddress($emailPush, 'Test Test');
 $mail->Subject = 'Order confirmed!';
-$mail->Body = $emailMsg;
+$mail->Body = 'test';
 //$mail->Body = 'Order confirmed: ' . $symbol . ' at price: ' . $price;
 
 //send the message, check for errors
@@ -282,12 +240,10 @@ if (!$mail->send()) {
 
 // push notifications
 
-$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
 
         echo "Order has been entered";
         return "Order has been entered";
-$response = $mydb->query($query);
-
+        //return false if not valid
 }
 
 function sendPortfolio ($username) {
