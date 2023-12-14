@@ -1,0 +1,16 @@
+2023-12-14 01:44:42
+Machine: VM: Rabbit/DB
+Location: Login
+Error: Cannot connect to DB - 
+2023-12-14 01:45:08
+Machine: VM: Rabbit/DB
+Location: Login
+Error: Cannot connect to DB - 
+2023-12-14 01:47:57
+Machine: VM: Rabbit/DB
+Location: Login
+Error: Cannot connect to DB - 
+2023-12-14 01:49:49
+Machine: VM: Rabbit/DB
+Location: Login
+Error: Incorrect password 

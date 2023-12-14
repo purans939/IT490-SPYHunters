@@ -12,11 +12,22 @@ require '/home/ps1messaging/git/testDB/vendor/autoload.php';
 
 function doLogin($username,$password)
 {
+	$logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");
 	$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+	
 
 if ($mydb->errno != 0)
 {
 	echo "failed to connect to database: ". $mydb->error . PHP_EOL;
+	
+        $logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");	
+	$logMsg = array();
+	$logMSG['type']='logger';
+	$logMSG['machine'] = "VM: Rabbit/DB";
+	$logMSG['location'] = "Login";
+	$logMSG['error'] = "Cannot connect to DB - " . $mydb->error;
+	$logging->publish($logMSG);
+
 	exit(0);
 }
 
@@ -47,12 +58,28 @@ if ($mydb->errno != 0)
 		}
 		else if ($password != $query2)
 		{
+		        $logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");
+			$logMsg = array();
+	        	$logMSG['type']='logger';
+        		$logMSG['machine'] = "VM: Rabbit/DB";
+        		$logMSG['location'] = "Login";
+        		$logMSG['error'] = "Incorrect password " . $mydb->error;
+        		$logging->publish($logMSG);
+
 			echo "incorrect pw";
 			$msg = "incorrect pw";
 			return $msg;
 		}
 		else
-        	{
+		{
+		        $logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");
+			$logMsg = array();
+	       		$logMSG['type']='logger';
+	       		$logMSG['machine'] = "VM: Rabbit/DB";
+       			$logMSG['location'] = "Login";
+        		$logMSG['error'] = "Incorrect username " . $mydb->error;
+      			$logging->publish($logMSG);
+
                 	echo "username not found";
                 	$msg = "username not found";
                 	return $msg;
@@ -60,6 +87,13 @@ if ($mydb->errno != 0)
 	}
 	else
 	{
+		$logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");
+                $logMsg = array();
+                $logMSG['type']='logger';
+                $logMSG['machine'] = "VM: Rabbit/DB";
+                $logMSG['location'] = "Login";
+                $logMSG['error'] = "Incorrect password " . $mydb->error;
+                $logging->publish($logMSG);
 		return 'pw couldnt be verified';
 	}	
 }
@@ -71,6 +105,13 @@ $mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
 if ($mydb->errno != 0)
 {
         echo "failed to connect to database: ". $mydb->error . PHP_EOL;
+        $logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");	
+	$logMsg = array();
+	$logMSG['type']='logger';
+	$logMSG['machine'] = "VM: Rabbit/DB";
+	$logMSG['location'] = "Login";
+	$logMSG['error'] = "Cannot connect to DB - " . $mydb->error;
+	$logging->publish($logMSG);
         exit(0);
 }
 
@@ -91,6 +132,13 @@ $mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
 if ($mydb->errno != 0)
 {
         echo "failed to connect to database: ". $mydb->error . PHP_EOL;
+        $logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");	
+	$logMsg = array();
+	$logMSG['type']='logger';
+	$logMSG['machine'] = "VM: Rabbit/DB";
+	$logMSG['location'] = "Login";
+	$logMSG['error'] = "Adding session" . $mydb->error;
+	$logging->publish($logMSG);
         exit(0);
 }
 
@@ -108,6 +156,13 @@ $mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
 if ($mydb->errno != 0)
 {
         echo "failed to connect to database: ". $mydb->error . PHP_EOL;
+        $logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");	
+	$logMsg = array();
+	$logMSG['type']='logger';
+	$logMSG['machine'] = "VM: Rabbit/DB";
+	$logMSG['location'] = "Login";
+	$logMSG['error'] = "Deleting session" . $mydb->error;
+	$logging->publish($logMSG);
         exit(0);
 }
 
@@ -125,6 +180,13 @@ $mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
 if ($mydb->errno != 0)
 {
         echo "failed to connect to database: ". $mydb->error . PHP_EOL;
+        $logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");	
+	$logMsg = array();
+	$logMSG['type']='logger';
+	$logMSG['machine'] = "VM: Rabbit/DB";
+	$logMSG['location'] = "Validate";
+	$logMSG['error'] = "Cannot connect to DB - " . $mydb->error;
+	$logging->publish($logMSG);
         exit(0);
 }
 
@@ -158,8 +220,11 @@ $values=[];
 foreach ($data as $ar) {
         $values[] = $ar['05. price'];
 }
-$priceVal = $ar['05. price'];
-	
+//$priceVal = $ar['05. price'];
+
+settype($limitPrice, "integer");
+settype($stopPrice, "integer");
+
 //market order types
 if ($ordertype=='market'){
 	$price = $priceVal;
@@ -171,22 +236,22 @@ if ($ordertype=='market'){
 }
 else if ($ordertype=='limit'){
 	$priceVal = 459;
-	if($limitPrice >= $priceVal){
+	if($limitPrice > $priceVal){
 		$price = $priceVal;
-		
+			
 		$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
 		$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
 		$response = $mydb->query($query);
 	}
 	else{
 		$orderDB = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-		$orderQ = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ($username, $symbol, $quantity, $price, $limitPrice, $stopPrice);";
+		$orderQ = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice');";
 		$response = $orderDB->query($orderQ);
 	}	
 }
 else if ($ordertype=='stop'){
 	$priceVal = 459;
-	if($stopPrice >= $priceVal){    
+	if($stopPrice > $priceVal){    
                 $price = $priceVal;
 		
 		$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
@@ -195,13 +260,13 @@ else if ($ordertype=='stop'){
 	}
         else{
 		$orderDB = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-		$orderQ = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES($username, $symbol, $quantity, $price, $limitOrder, $stopOrder)";
+		$orderQ = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
 		$response = $orderDB->query($orderQ);
         }
 }
 
 // push notifications
-
+/*
 	//get email
         
         $mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
@@ -234,10 +299,17 @@ $mail->Body = 'test';
 //send the message, check for errors
 if (!$mail->send()) {
     echo 'Mailer Error: ' . $mail->ErrorInfo;
+    	$logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");	
+	$logMsg = array();
+	$logMSG['type']='logger';
+	$logMSG['machine'] = "VM: Rabbit/DB";
+	$logMSG['location'] = "PHPMailer on Push Notification";
+	$logMSG['error'] = "Cannot sent email - " . $mail->ErrorInfo;
+	$logging->publish($logMSG);
 } else {
     echo 'Message sent!';
         }
-
+ */
 // push notifications
 
 
@@ -282,6 +354,14 @@ if ($stmt->num_rows>0)
 else
 {
         echo "error on portfolio";
+        $logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");	
+	$logMsg = array();
+	$logMSG['type']='logger';
+	$logMSG['machine'] = "VM: Rabbit/DB";
+	$logMSG['location'] = "Sending portfolio";
+	$logMSG['error'] = "Cannot pull portfolio of user:" . $username . PHP_EOL;
+	$logging->publish($logMSG);
+        
 }
     return true;
     //return false if not valid
