@@ -13,7 +13,7 @@ $request['symbol'] = 'SPY';
 $request['side'] = 'buy';
 $request['quantity'] = '5';
 $request['ordertype'] = 'limit';
-$request['price'] = 'price';
+$request['price'] = '500';
 $request['limitPrice'] = 350;
 $request['stopPrice'] = 670;
 
