@@ -4,21 +4,10 @@ require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 
-$client = new rabbitMQClient("dbRabbitMQ.ini","dmzServer");
-if (isset($argv[1]))
-{
-  $msg = $argv[1];
-}
-else
-{
-  $msg = "test message";
-}
+$client = new rabbitMQClient("dbRabbitMQ.ini","baseServer");
 
-$request = array();
-$request['type'] = "Login";
-$request['username'] = "baseTest";
-$request['password'] = "basePW";
-$request['message'] = $msg;
+$request['type'] = "create2FA";
+$request['username'] = "admin";
 $response = $client->send_request($request);
 //$response = $client->publish($request);
 
