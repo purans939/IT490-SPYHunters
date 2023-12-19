@@ -211,27 +211,9 @@ else
 
 function orderEntry($username,$symbol,$side,$quantity,$ordertype,$price,$stopPrice,$limitPrice)
 {
-//pull current price
-/*
-$url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='.$symbol.'&apikey=OKNV0XCQX6NO5GJD';
-$json = file_get_contents($url);
-$data = json_decode($json,true);
-
-$values=[];
-foreach ($data as $ar) {
-        $values[] = $ar['05. price'];
-}
-*/
-//$priceVal = $ar['05. price'];
-$priceVal = 470;
-
-	settype($limitPrice, "integer");
-	settype($stopPrice, "integer");
 	
 	//market order types
 	if ($ordertype=='market'){
-		$price = $priceVal;
-		
 		$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
 		$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
 		$response = $mydb->query($query);
@@ -239,10 +221,7 @@ $priceVal = 470;
 		echo "Order has been entered";
         	return "Order has been entered";
 	}
-	else if ($ordertype=='limit' && $price > $limitPrice){
-		
-			$price = $priceVal;
-				
+	elseif ($limitPrice < $price){
 			$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
 			$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
 			$response = $mydb->query($query);
@@ -250,9 +229,7 @@ $priceVal = 470;
 			echo "Limit order has been entered";
         		return "Limit order has been entered";
 		}
-	elseif($ordertype=='limit' && $price < $limitPrice){
-		echo 'anything here';
-			$price = $priceVal;
+	elseif ($price < $limitPrice){
 			$orderDB = new mysqli('127.0.0.1','baseUser','12345','baseDB');
 			$orderQ = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice');";
 			$response = $orderDB->query($orderQ);
@@ -260,80 +237,6 @@ $priceVal = 470;
 			echo "Order unfulfilled - awaiting limit";
         		return "Order unfulfilled - awaiting limit";
 		}	
-	elseif ($ordertype=='stop'){
-		$priceVal = 459;
-		if($stopPrice > $priceVal){    
-		        $price = $priceVal;
-			
-			$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-			$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
-			$response = $mydb->query($query);
-			
-			echo "Stop order has been entered";
-        		return "Stop order has been entered";
-		}
-		else{
-			$price = $priceVal;
-			$orderDB = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-			$orderQ = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
-			$response = $orderDB->query($orderQ);
-			
-			echo "Order unfulfilled - awaiting stop";
-        		return "Order unfulfilled - awaiting stop";
-		}
-	}
-
-// push notifications
-/*
-	//get email
-        
-        $mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-        $query2 = "SELECT email FROM accounts WHERE username = '$username';";
-        $stmt2 = $mydb2->query($query2);
-
-        $result = mysqli_query($mydb, $query2);
-        if (mysqli_num_rows($result) > 0) {
-                while ($row = mysqli_fetch_assoc($result)) {
-                        $emailPush=$row['email']; }
-                }
-        
-        //get email
-
-$mail = new PHPMailer();
-$mail->isSMTP();
-$mail->SMTPDebug = SMTP::DEBUG_SERVER;
-$mail->Host = 'smtp.gmail.com';
-$mail->Port = 465;
-$mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-$mail->SMTPAuth = true;
-$mail->Username = 'spyhunters490@gmail.com';
-$mail->Password = 'gxjtdmttmxpypfkw';
-$mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
-$mail->addAddress($emailPush, 'Test Test');
-$mail->Subject = 'Order confirmed!';
-$mail->Body = 'test';
-//$mail->Body = 'Order confirmed: ' . $symbol . ' at price: ' . $price;
-
-//send the message, check for errors
-if (!$mail->send()) {
-    echo 'Mailer Error: ' . $mail->ErrorInfo;
-    	$logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");	
-	$logMsg = array();
-	$logMSG['type']='logger';
-	$logMSG['machine'] = "VM: Rabbit/DB";
-	$logMSG['location'] = "PHPMailer on Push Notification";
-	$logMSG['error'] = "Cannot sent email - " . $mail->ErrorInfo;
-	$logging->publish($logMSG);
-} else {
-    echo 'Message sent!';
-        }
- */
-// push notifications
-
-
-        //echo "Order has been entered";
-        //return "Order has been entered";
-        //return false if not valid
 }
 
 function sendPortfolio ($username) {
@@ -448,118 +351,6 @@ else
 
 }
 
-function create2FA ($username){
-
-	$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-
-	//generate code
-	$code = rand(100000, 999999);
-	
-	//make sure there is no other code in DB for user
-	$checkCode = "SELECT * FROM 2facodes WHERE username = '$username'";
-	$stmt = $mydb->query($checkCode);
-
-	if ($stmt->num_rows>0) {
-		$removeCode = "DELETE FROM 2facodes WHERE username = '$username'";
-		$stmt2 = $mydb->query($removeCode);
-
-		//send to 2facodes db associated to username
-		$storeCode = "INSERT INTO 2facodes (username, code) VALUES ('$username', '$code')";
-		$stmt3 = $mydb->query($storeCode);
-		
-			//get email
-		
-			$mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-			$query2 = "SELECT email FROM accounts WHERE username = '$username';";
-			$stmt2 = $mydb2->query($query2);
-
-			$result = mysqli_query($mydb, $query2);
-			if (mysqli_num_rows($result) > 0) {
-				while ($row = mysqli_fetch_assoc($result)) {
-				        $emailPush=$row['email']; }
-				}
-			
-			//send email
-			$mail = new PHPMailer();
-			$mail->isSMTP();
-			$mail->SMTPDebug = SMTP::DEBUG_SERVER;
-			$mail->Host = 'smtp.gmail.com';
-			$mail->Port = 465;
-			$mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-			$mail->SMTPAuth = true;
-			$mail->Username = 'spyhunters490@gmail.com';
-			$mail->Password = 'gxjtdmttmxpypfkw';
-			$mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
-			$mail->addAddress($emailPush, $username);
-			$mail->Subject = 'Your 2FA Code:';
-			$mail->Body = 'Your 2FA Code is: ' . $code;
-					if (!$mail->send()) {
-		    				echo 'Mailer Error: ' . $mail->ErrorInfo;
-		  			} 
-		  			else {
-		    				echo 'Message sent!';
-					}
-	}
-	else {
-		//send to 2facodes db associated to username
-		$storeCode = "INSERT INTO 2facodes (username, code) VALUES ('$username', '$code')";
-                $stmt3 = $mydb->query($storeCode);
-                
-                //get email
-        
-		$mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-		$query2 = "SELECT email FROM accounts WHERE username = '$username';";
-		$stmt2 = $mydb2->query($query2);
-
-		$result = mysqli_query($mydb, $query2);
-		if (mysqli_num_rows($result) > 0) {
-		        while ($row = mysqli_fetch_assoc($result)) {
-		                $emailPush=$row['email']; }
-		        }
-		
-		//send email
-		$mail = new PHPMailer();
-		$mail->isSMTP();
-		$mail->SMTPDebug = SMTP::DEBUG_SERVER;
-		$mail->Host = 'smtp.gmail.com';
-		$mail->Port = 465;
-		$mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-		$mail->SMTPAuth = true;
-		$mail->Username = 'spyhunters490@gmail.com';
-		$mail->Password = 'gxjtdmttmxpypfkw';
-		$mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
-		$mail->addAddress($emailPush, $username);
-		$mail->Subject = 'Your 2FA Code:';
-		$mail->Body = 'Your 2FA Code is: ' . $code;
-	}
-}
-
-function check2FA ($username, $inputCode) {
-
-        $mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-
-	//get code from db where username
-	$check = "SELECT code FROM 2facodes WHERE username = '$username'";
-        $stmt = $mydb->query($check);
-		
-	//if user input = code in DB, return message
-	$result = mysqli_query($mydb, $check);
-        if (mysqli_num_rows($result) > 0) {
-                while ($row = mysqli_fetch_assoc($result)) {
-			$codeCheck=$row['code']; }
-	}	
-
-        //check if inputCode equals result in data
-	if ($codeCheck == $inputCode){
-		$checkMsg = 'login success';
-		return $checkMsg;	
-	}
-	else {
-		$checkMsg = 'incorrect code';
-		return $checkMsg;
-	}
-}
-
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;
@@ -581,11 +372,7 @@ function requestProcessor($request)
     case "portfolio":
       return sendPortfolio($request['username']);
     case "predictions":
-      return sendPredictions($request['symbol']);
-    case "create2FA":
-      return create2FA($request['username']);	   
-    case "check2FA":
-      return check2FA($request['username'], $request['inputCode']);
+      return sendPredictions($request['symbol']);      
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 }

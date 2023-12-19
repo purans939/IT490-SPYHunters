@@ -149,8 +149,7 @@ class rabbitMQClient
 	private $routing_key = '*';
 	private $response_queue = array();
 	private $exchange_type = "topic";
-	private $uid;
-
+	
 	function __construct($machine, $server = "rabbitMQ")
 	{
 		$this->machine = getHostInfo(array($machine));
@@ -215,7 +214,7 @@ class rabbitMQClient
 
       $callback_queue = new AMQPQueue($channel);
       $callback_queue->setName($this->queue."_response");
-      $callback_queue->declareQueue();
+      $callback_queue->declare();
 			$callback_queue->bind($exchange->getName(),$this->routing_key.".response");
 
 			$this->conn_queue = new AMQPQueue($channel);
@@ -227,8 +226,7 @@ class rabbitMQClient
 			$callback_queue->consume(array($this,'process_response'));
 
 			$response = $this->response_queue[$uid];
-		//	unset($this->response_queue[$uid]);
-		//12/4/23 - may need to uncomment this ^
+			unset($this->response_queue[$uid]);
 			return $response;
 		}
 		catch(Exception $e)
