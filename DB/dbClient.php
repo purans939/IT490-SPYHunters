@@ -6,7 +6,7 @@ require_once('rabbitMQLib.inc');
 
 $client = new rabbitMQClient("dbRabbitMQ.ini","baseServer");
 
-$request['type'] = "create2FA";
+$request['type'] = "stockOverlap";
 $request['username'] = "admin";
 $response = $client->send_request($request);
 //$response = $client->publish($request);

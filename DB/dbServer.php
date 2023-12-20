@@ -283,51 +283,52 @@ $priceVal = 470;
 		}
 	}
 
+// working, commented out because of all the emails that come in when testing limit/stop orders
 // push notifications
-/*
-	//get email
-        
-        $mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
-        $query2 = "SELECT email FROM accounts WHERE username = '$username';";
-        $stmt2 = $mydb2->query($query2);
 
-        $result = mysqli_query($mydb, $query2);
-        if (mysqli_num_rows($result) > 0) {
-                while ($row = mysqli_fetch_assoc($result)) {
-                        $emailPush=$row['email']; }
+		//get email
+		
+		$mydb2 = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+		$query2 = "SELECT email FROM accounts WHERE username = '$username';";
+		$stmt2 = $mydb2->query($query2);
+
+		$result = mysqli_query($mydb, $query2);
+		if (mysqli_num_rows($result) > 0) {
+		        while ($row = mysqli_fetch_assoc($result)) {
+		                $emailPush=$row['email']; }
                 }
         
-        //get email
+		//get email
 
-$mail = new PHPMailer();
-$mail->isSMTP();
-$mail->SMTPDebug = SMTP::DEBUG_SERVER;
-$mail->Host = 'smtp.gmail.com';
-$mail->Port = 465;
-$mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-$mail->SMTPAuth = true;
-$mail->Username = 'spyhunters490@gmail.com';
-$mail->Password = 'gxjtdmttmxpypfkw';
-$mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
-$mail->addAddress($emailPush, 'Test Test');
-$mail->Subject = 'Order confirmed!';
-$mail->Body = 'test';
-//$mail->Body = 'Order confirmed: ' . $symbol . ' at price: ' . $price;
+		$mail = new PHPMailer();
+		$mail->isSMTP();
+		$mail->SMTPDebug = SMTP::DEBUG_SERVER;
+		$mail->Host = 'smtp.gmail.com';
+		$mail->Port = 465;
+		$mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+		$mail->SMTPAuth = true;
+		$mail->Username = 'spyhunters490@gmail.com';
+		$mail->Password = 'gxjtdmttmxpypfkw';
+		$mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
+		$mail->addAddress($emailPush, 'Test Test');
+		$mail->Subject = 'Order confirmed!';
+		$mail->Body = 'test';
+		//$mail->Body = 'Order confirmed: ' . $symbol . ' at price: ' . $price;
 
-//send the message, check for errors
-if (!$mail->send()) {
-    echo 'Mailer Error: ' . $mail->ErrorInfo;
-    	$logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");	
-	$logMsg = array();
-	$logMSG['type']='logger';
-	$logMSG['machine'] = "VM: Rabbit/DB";
-	$logMSG['location'] = "PHPMailer on Push Notification";
-	$logMSG['error'] = "Cannot sent email - " . $mail->ErrorInfo;
-	$logging->publish($logMSG);
-} else {
-    echo 'Message sent!';
-        }
- */
+		//send the message, check for errors
+		if (!$mail->send()) {
+		    echo 'Mailer Error: ' . $mail->ErrorInfo;
+		    	$logging = new rabbitMQClient("dbRabbitMQ.ini", "loggingQueue");	
+			$logMsg = array();
+			$logMSG['type']='logger';
+			$logMSG['machine'] = "VM: Rabbit/DB";
+			$logMSG['location'] = "PHPMailer on Push Notification";
+			$logMSG['error'] = "Cannot sent email - " . $mail->ErrorInfo;
+			$logging->publish($logMSG);
+		} else {
+		    echo 'Message sent!';
+			}
+ 
 // push notifications
 
 
@@ -403,9 +404,9 @@ echo "\n\n";
 
 foreach ($response as $row) {
 	$columns = 'Symbol, ' . implode(", ", array_keys($row));
-	echo $columns;
+	//echo $columns;
 	$values = "'" . $symbol . "'" . ", " . "'" . implode("', '", $row) . "'";
-	echo $values;
+	//echo $values;
 	//$query2 = "INSERT INTO predictions (symbol, datetime, open, high, low, close, volume, adjusted) VALUES (1, 2, 3, 4, 5, 6, 7, 8)";
 	$query2 = "INSERT INTO predictions ($columns) VALUES ($values)";
 	
@@ -491,7 +492,7 @@ function create2FA ($username){
 			$mail->Password = 'gxjtdmttmxpypfkw';
 			$mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
 			$mail->addAddress($emailPush, $username);
-			$mail->Subject = 'Your 2FA Code:';
+			$mail->Subject = 'Your 2FA Code';
 			$mail->Body = 'Your 2FA Code is: ' . $code;
 					if (!$mail->send()) {
 		    				echo 'Mailer Error: ' . $mail->ErrorInfo;
@@ -529,7 +530,7 @@ function create2FA ($username){
 		$mail->Password = 'gxjtdmttmxpypfkw';
 		$mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
 		$mail->addAddress($emailPush, $username);
-		$mail->Subject = 'Your 2FA Code:';
+		$mail->Subject = 'Your 2FA Code';
 		$mail->Body = 'Your 2FA Code is: ' . $code;
 	}
 }
@@ -560,6 +561,59 @@ function check2FA ($username, $inputCode) {
 	}
 }
 
+function stockOverlap ($username) {
+
+	//pull portfolio from db
+	$mydb = new mysqli('127.0.0.1','baseUser','12345','baseDB');
+		if ($mydb->errno != 0){
+			echo "failed to connect to database: ". $mydb->error . PHP_EOL;
+			exit(0); }
+		echo "successfully connected to database".PHP_EOL;
+	$query = "SELECT username, symbol, side, quantity, ordertype, price FROM portfolio WHERE username = '$username';";
+	$stmt = $mydb->query($query);
+
+	//call port, take data, evaluate percentages, store in new db
+	if ($stmt->num_rows>0) {
+	/*
+		//get symbol 
+		$query2 = "SELECT symbol FROM portfolio GROUP BY symbol;";
+		$stmt2 = $mydb->query($query2);
+		$getSymbol = $stmt2->fetch_all(PDO::FETCH_ASSOC);
+		foreach ($getSymbol as $symbolArr) {
+			foreach ($symbolArr as $stockSym) {
+				$query5 = "INSERT INTO stockOverlap (username, symbol) VALUES ('$username', '$stockSym');";
+				$stmt5 = $mydb->query($query5);
+			}
+		} */
+		
+		
+		//get percentage - try new method
+		//last minute fix - combine all 3 variables into 1 select statement
+		$query3 = "SELECT symbol, AVG(price), sum(quantity*price) / (SELECT SUM(quantity*price) FROM portfolio) * 100 AS PERCENTAGE FROM portfolio GROUP BY symbol;";
+		$stmt3 = $mydb->query($query3);
+		$getPercentage = $stmt3->fetch_all(PDO::FETCH_ASSOC);
+		foreach ($getPercentage as $percentageArr) {
+			$query6 = "INSERT INTO stockOverlap (username, quantity, avgPrice, symbol) VALUES ('$username', '$percentageArr[2]', '$percentageArr[1]', '$percentageArr[0]');";
+			$stmt6 = $mydb->query($query6);
+		}
+	
+		//get avg price
+		/*
+		$query4 = "SELECT AVG(price) FROM portfolio GROUP BY symbol;";
+		$stmt4 = $mydb->query($query4);
+		$getAvgPrice = $stmt4->fetch_all(PDO::FETCH_ASSOC);
+		foreach ($getAvgPrice as $avgPriceArr) {
+			foreach ($avgPriceArr as $stockAvg) {
+				$query7 = "UPDATE stockOverlap SET avgPrice = '$stockAvg' WHERE username = '$username';";
+				$stmt7 = $mydb->query($query7);
+			}
+		} */
+	}		
+	
+	//call stats from stockOverlap table
+	
+}
+
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;
@@ -586,6 +640,8 @@ function requestProcessor($request)
       return create2FA($request['username']);	   
     case "check2FA":
       return check2FA($request['username'], $request['inputCode']);
+    case "stockOverlap":
+      return stockOverlap($request['username']);
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 }
