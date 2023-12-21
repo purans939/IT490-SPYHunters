@@ -3,13 +3,21 @@ session_start();
 
 if ( !isset($_POST['username'], $_POST['password']) ) {
 	// Could not get the data that should have been sent.
+	$logging = new rabbitMQClient("loggingRabbitMQ.ini","loggingQueue");
+
+$logMsg = array();
+$logMSG['type'] = "logger";
+$logMSG['machine'] = "VM: Rabbit/DB";
+$logMSG['location'] = "Login";
+$logMSG['error'] = "Cannot connect to DB - ";
+$logging->publish($logMSG);
 	exit('Please fill both the username and password fields!');
 }
 
 $username = $_POST['username'];
 $password = $_POST['password'];
-
-// You should sanitize and hash the password for security. This is a basic example; use a more secure method in practice.
+$email = $_POST['email'];
+// sanitize and hash the password for security.
 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
 require_once('path.inc');
@@ -23,13 +31,22 @@ if (isset($argv[1]))
 }
 else
 {
-  $msg = "test message";
+	$msg = "test message";
+	$logging = new rabbitMQClient("loggingRabbitMQ.ini","loggingQueue");
+
+$logMsg = array();
+$logMSG['type'] = "logger";
+$logMSG['machine'] = "VM: Rabbit/DB";
+$logMSG['location'] = "Login";
+$logMSG['error'] = "Cannot connect to DB - ";
+$logging->publish($logMSG);
 }
 
 $request = array();
 $request['type'] = "createUser";
 $request['username'] = $username;
-$request['password'] = $password;
+$request['password'] = $hashed_password;
+$request['email'] = $email;
 $request['message'] = $msg;
 $response = $client->send_request($request);
 //$response = $client->publish($request);
