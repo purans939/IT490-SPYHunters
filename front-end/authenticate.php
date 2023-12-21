@@ -14,12 +14,13 @@ if (isset($argv[1]))
 }
 else
 {
-  $msg = "test message";
+	$msg = "test message";
 }
 
 $username = $_POST['username'];
 $password = $_POST['password'];
-
+$hashed_password = password_hash($password, PASSWORD_DEFAULT);
+$_SESSION['username'] = $_POST['username'];
 
 $request = array();
 $request['type'] = "login";
@@ -31,7 +32,12 @@ $response = $client->send_request($request);
 
 echo "client received response: ".PHP_EOL;
 if ($response == 'login success'){
-	header('Location: home.php');
+	$client = new rabbitMQClient("testRabbitMQ.ini","testServer");
+
+	$request['type'] = "create2FA";
+	$request['username'] = $username;
+	$response = $client->publish($request);
+	header('Location: 2fa.php');
 }
 
 else{
@@ -40,7 +46,5 @@ else{
 
 
 echo "\n\n";
-
-echo $argv[0]." END".PHP_EOL;
     
 ?>

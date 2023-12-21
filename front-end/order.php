@@ -37,19 +37,46 @@ session_start();
         <label for="quantity">Quantity (positive integer):</label>
         <input type="number" id="quantity" name="quantity" min="1" step="1" required><br>
 
-        <!-- Dropdown Menu for Market -->
-        <label for="ordertype">Order Type:</label>
-        <select id="ordertype" name="ordertype" required>
-            <option value="market">Market</option>
-        </select><br>
+        <!-- Dropdown Menu for Order Type -->
+	<label for="ordertype">Order Type:</label>
+	<select id="ordertype" name="ordertype" required onchange="showAdditionalFields()">
+    	<option value="market">Market</option>
+    	<option value="limit">Limit</option>
+    	<option value="stop">Stop</option>
+	</select><br>
 
-        <!-- Input Field for Monetary Value -->
-        <label for="price">Price (monetary value):</label>
-        <input type="number" id="price" name="price" min="0" step="0.01" required><br>
+	<!-- Additional Field for Limit Price -->
+	<div id="limitPriceField" style="display: none;">
+    	<label for="limitPrice">Limit Price:</label>
+    	<input type="number" id="limitPrice" name="limitPrice" min="0" step="0.01">
+	</div>
+
+	<!-- Additional Field for Stop Price -->
+	<div id="stopPriceField" style="display: none;">
+   	 <label for="stopPrice">Stop Price:</label>
+    	<input type="number" id="stopPrice" name="stopPrice" min="0" step="0.01">
+	</div><br>
 
         <!-- Submit Button -->
         <input type="submit" value="Submit">
     </form>
 		</div>
-	</body>
-</html>
+	</body> </html>
+
+	<script>
+    function showAdditionalFields() {
+        var orderType = document.getElementById("ordertype").value;
+        var limitPriceField = document.getElementById("limitPriceField");
+        var stopPriceField = document.getElementById("stopPriceField");
+
+        if (orderType === "limit" || orderType === "stop") {
+            limitPriceField.style.display = "block";
+            stopPriceField.style.display = "block";
+        } else {
+            limitPriceField.style.display = "none";
+            stopPriceField.style.display = "none";
+        }
+    }
+	</script>
+
+

@@ -1,20 +1,12 @@
 <?php
-session_start();
-require_once('path.inc');
-require_once('get_host_info.inc');
-require_once('rabbitMQLib.inc');
-$username = $_SESSION['username'];
-// Create a RabbitMQ client instance
-$client = new rabbitMQClient("testRabbitMQ.ini","testServer");
-
 // Check if a custom message is provided as a command-line argument
 if (isset($argv[1])) {
     $msg = $argv[1];
 } else {
-	$msg = "test message";
-	$logging = new rabbitMQClient("loggingRabbitMQ.ini","loggingQueue");
+        $msg = "test message";
+        $logging = new rabbitMQClient("loggingRabbitMQ.ini","loggingQueue");
 
-$logMsg = array();
+$logMsg{= array();
 $logMSG['type'] = "logger";
 $logMSG['machine'] = "VM: Rabbit/DB";
 $logMSG['location'] = "Login";
@@ -24,7 +16,7 @@ $logging->publish($logMSG);
 
 // Prepare the request
 $request = array();
-$request['type'] = "portfolio";
+$request['type'] = "stockoverlap";
 $request['username'] = "$username";
 $request['message'] = $msg;
 
@@ -44,3 +36,4 @@ $response = $client->send_request($request);
 $payload = json_encode($response);
 echo $payload;
 ?>
+

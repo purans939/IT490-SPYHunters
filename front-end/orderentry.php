@@ -6,21 +6,34 @@ require_once('rabbitMQLib.inc');
 require_once('testRabbitMQ.ini');
 
 $client = new rabbitMQClient("testRabbitMQ.ini","testServer");
-if (isset($argv[1]))
-{
-  $msg = $argv[1];
+//pulling price
+$symbol = $_POST['symbol'];
+$url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='.$symbol.'&apikey=NEOQOL1NQUI8AUO8';
+$json = file_get_contents($url);
+$data = json_decode($json,true);
+
+echo $json;
+
+$values = [];
+foreach ($data as $ar) {
+        $values[] = $ar['01. symbol'];
+	$values[] = $ar['05. price'];
 }
-else
-{
-  $msg = "test message";
-}
+$symbolVal = $ar['01. symbol'];
+$priceVal = $ar['05. price'];
+
+//pulling price
+
+$msg = 'test';
 
 $username = $_SESSION['username'];
-$symbol = $_POST['symbol'];
 $side = $_POST['side'];
 $quantity = $_POST['quantity'];
 $ordertype = $_POST['ordertype'];
-$price = $_POST['price'];
+//$price = $_POST['price'];
+
+$limitPrice = isset($_POST['limitPrice']) ? $_POST['limitPrice'] : null;
+$stopPrice = isset($_POST['stopPrice']) ? $_POST['stopPrice'] : null;
 
 $request = array();
 $request['type'] = "order";
@@ -31,7 +44,9 @@ $request['symbol'] = $symbol;
 $request['side'] = $side;
 $request['quantity'] = $quantity;
 $request['ordertype'] = $ordertype;
-$request['price'] = $price;
+$request['price'] = $priceVal;
+$request['limitPrice'] = $limitPrice;
+$request['stopPrice'] = $stopPrice;
 $response = $client->send_request($request);
 //$response = $client->publish($request);
 
