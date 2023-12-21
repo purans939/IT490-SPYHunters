@@ -11,12 +11,21 @@ if (isset($argv[1]))
 }
 else
 {
-  $msg = "test message";
+	$msg = "test message";
+	$logging = new rabbitMQClient("loggingRabbitMQ.ini","loggingQueue");
+
+$logMsg = array();
+$logMSG['type'] = "logger";
+$logMSG['machine'] = "VM: Rabbit/DB";
+$logMSG['location'] = "Login";
+$logMSG['error'] = "Cannot connect to DB - ";
+$logging->publish($logMSG);
 }
 
 $request = array();
 $request['type'] = "order";
-$request['username'] = "emailtest";
+$request['username'] = "abaseTest";
+$request['password'] = "basePW";
 $request['message'] = $msg;
 
 $request['symbol'] = '$SPY';

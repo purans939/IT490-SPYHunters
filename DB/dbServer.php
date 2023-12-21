@@ -212,7 +212,7 @@ else
 function orderEntry($username,$symbol,$side,$quantity,$ordertype,$price,$stopPrice,$limitPrice)
 {
 //pull current price
-/*
+
 $url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='.$symbol.'&apikey=OKNV0XCQX6NO5GJD';
 $json = file_get_contents($url);
 $data = json_decode($json,true);
@@ -221,9 +221,8 @@ $values=[];
 foreach ($data as $ar) {
         $values[] = $ar['05. price'];
 }
-*/
-//$priceVal = $ar['05. price'];
-$priceVal = 470;
+
+$priceVal = $ar['05. price'];
 
 	settype($limitPrice, "integer");
 	settype($stopPrice, "integer");
@@ -236,8 +235,8 @@ $priceVal = 470;
 		$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
 		$response = $mydb->query($query);
 		
-		echo "Order has been entered";
-        	return "Order has been entered";
+		//echo "Order has been entered";
+        	//return "Order has been entered";
 	}
 	else if ($ordertype=='limit' && $price > $limitPrice){
 		
@@ -247,8 +246,8 @@ $priceVal = 470;
 			$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
 			$response = $mydb->query($query);
 			
-			echo "Limit order has been entered";
-        		return "Limit order has been entered";
+			//echo "Limit order has been entered";
+        		//return "Limit order has been entered";
 		}
 	elseif($ordertype=='limit' && $price < $limitPrice){
 		echo 'anything here';
@@ -257,8 +256,8 @@ $priceVal = 470;
 			$orderQ = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice');";
 			$response = $orderDB->query($orderQ);
 			
-			echo "Order unfulfilled - awaiting limit";
-        		return "Order unfulfilled - awaiting limit";
+			//echo "Order unfulfilled - awaiting limit";
+        		//return "Order unfulfilled - awaiting limit";
 		}	
 	elseif ($ordertype=='stop'){
 		$priceVal = 459;
@@ -269,8 +268,8 @@ $priceVal = 470;
 			$query = "INSERT INTO portfolio (username, symbol, side, quantity, ordertype, price) VALUES ('$username', '$symbol', '$side', '$quantity', '$ordertype', '$price')";
 			$response = $mydb->query($query);
 			
-			echo "Stop order has been entered";
-        		return "Stop order has been entered";
+			//echo "Stop order has been entered";
+        		//return "Stop order has been entered";
 		}
 		else{
 			$price = $priceVal;
@@ -278,12 +277,11 @@ $priceVal = 470;
 			$orderQ = "INSERT INTO awaitingorders (username, symbol, quantity, price, limitOrder, stopOrder) VALUES ('$username', '$symbol', '$quantity', '$price', '$limitPrice', '$stopPrice')";
 			$response = $orderDB->query($orderQ);
 			
-			echo "Order unfulfilled - awaiting stop";
-        		return "Order unfulfilled - awaiting stop";
+			//echo "Order unfulfilled - awaiting stop";
+        		//return "Order unfulfilled - awaiting stop";
 		}
 	}
 
-// working, commented out because of all the emails that come in when testing limit/stop orders
 // push notifications
 
 		//get email
@@ -312,8 +310,8 @@ $priceVal = 470;
 		$mail->setFrom('spyhunters490@gmail.com', 'SPY Hunters');
 		$mail->addAddress($emailPush, 'Test Test');
 		$mail->Subject = 'Order confirmed!';
-		$mail->Body = 'test';
-		//$mail->Body = 'Order confirmed: ' . $symbol . ' at price: ' . $price;
+		//$mail->Body = 'test';
+		$mail->Body = "Order confirmed: $" . $symbol . "\nPrice: $" . $price . "\nQuantity: " . $quantity . "\nSide: " . $side . "\nOverall order: $" . ($quantity*$price);
 
 		//send the message, check for errors
 		if (!$mail->send()) {
@@ -323,7 +321,7 @@ $priceVal = 470;
 			$logMSG['type']='logger';
 			$logMSG['machine'] = "VM: Rabbit/DB";
 			$logMSG['location'] = "PHPMailer on Push Notification";
-			$logMSG['error'] = "Cannot sent email - " . $mail->ErrorInfo;
+			$logMSG['error'] = "Cannot send email - " . $mail->ErrorInfo;
 			$logging->publish($logMSG);
 		} else {
 		    echo 'Message sent!';
@@ -332,8 +330,8 @@ $priceVal = 470;
 // push notifications
 
 
-        //echo "Order has been entered";
-        //return "Order has been entered";
+        echo "Order has been entered";
+        return "Order has been entered";
         //return false if not valid
 }
 
@@ -611,7 +609,12 @@ function stockOverlap ($username) {
 	}		
 	
 	//call stats from stockOverlap table
+	$query5 = "SELECT Weight FROM stockOverlap WHERE Ticker = '$symbol';";
+	$stmt5 = $mydb->query($query5);
+	$getSymbolWeight = $stmt5->fetch_all(PDO::FETCH_ASSOC);
 	
+	
+
 }
 
 function requestProcessor($request)
